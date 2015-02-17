@@ -14,13 +14,14 @@
 static struct nf_hook_ops nfho; //struct holding set of hook function options
 
 //function to be called by hook
-unsigned int nf_hookfn( unsigned int hooknum, 
+unsigned int my_nf_hookfn( const struct nf_hook_ops *ops,
+						/*unsigned int hooknum, */
 						struct sk_buff *skb, 
 						const struct net_device *in, 
 						const struct net_device *out, 
 						int (*okfn)(struct sk_buff*))
 {
-	printk(KERN_INFO "packet dropped\n"); //log to /var/log/syslog
+	printk(KERN_INFO "packet dropped %d \n,", ops->hooknum); //log to /var/log/syslog
 	return NF_DROP;		//drops the packets
 }
 
@@ -29,7 +30,7 @@ unsigned int nf_hookfn( unsigned int hooknum,
 
 int __init reg_my_hook(void)
 {
-	nfho.hook = nf_hookfn;  //funtion to call when conditions below are met
+	nfho.hook = my_nf_hookfn;  //funtion to call when conditions below are met
 	nfho.hooknum = NF_INET_PRE_ROUTING;	//called right after packed recieved, first hook in Netfilter
 	nfho.pf = PF_INET;	//IPV4 packets
 	nfho.priority = NF_IP_PRI_FIRST;	//set to highest priorityover all other hook functions
