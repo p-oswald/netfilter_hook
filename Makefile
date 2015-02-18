@@ -1,4 +1,4 @@
-obj-m := first_netfilter.o
+obj-m := ip_filter.o
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 all:
