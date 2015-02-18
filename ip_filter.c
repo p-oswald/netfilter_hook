@@ -12,31 +12,41 @@
 
 
 static struct nf_hook_ops nfho; //struct holding set of hook function options
-struct sk_buff *sock_buff;
-struct udphdr *udp_header;
-struct iphdr *ip_header;
-
-
 
 //function to be called by hook
-unsigned int my_nf_hookfn( const struct nf_hook_ops *ops,
-						/*unsigned int hooknum, */
-						struct sk_buff *skb, 
-						const struct net_device *in, 
-						const struct net_device *out, 
-						int (*okfn)(struct sk_buff *))
-{
-	sock_buff = skb;
+static unsigned int my_nf_hookfn( const struct nf_hook_ops *ops,
+								struct sk_buff *skb, 
+								const struct net_device *in, 
+								const struct net_device *out, 
+								int (*okfn)(struct sk_buff *))
+
 	
-	ip_header = (struct iphdr *)skb_network_header(sock_buff); //access to ip header through accessor
+/*	ip_header = (struct iphdr *)skb_network_header(sock_buff); //access to ip header through accessor
 	unsigned int src_ip = (unsigned int)ip_header->saddr;
 	/*unsigned int dest_ip = (unsigned int)ip_header->daddr;*/
+{
+	struct tcphdr *tcp_header  = NULL;
+	struct iphdr *ip_header = NULL;
 
-	if (!sock_buff) 
+	if ((skb != NULL) && ((*skb)->pkt_type == PACKET_HOST) && ((*skb)->protocol == htons(ETH_P_IP)))
 	{
-		return NF_ACCEPT;
+		ip_header = ip_hdr((*skb)); //access ip header
+
+		if ((ip_header->protocol == IPPROTO_TCP) )
+		{
+			tcp_header = (struct tcphdr *)(skb_network_header((*skb))+ ip_hdrlen((*skb))); //acces to tcp header
+			
+			printk(KERN_ALERT "INFO: Src IP addr: %u.\n", ip_header->saddr);
+			printk(KERN_ALERT "INFO: Dst IP addr: %u.\n", ip_header->daddr);
+			printk(KERN_ALERT "INFO: Src Port: %u.\n", tcp_header->source);
+			printk(KERN_ALERT "INFO: Dst Port: %u.\n", tcp_header->dest);
+		}
 	}
 
+	return NF_ACCEPT;
+}
+
+/*
 	if (ip_header->saddr==src_ip)
 	{
 		printk(KERN_INFO "got ip packet \n"); 	//log that a udp packet was captured to /var/log/syslog
@@ -44,8 +54,8 @@ unsigned int my_nf_hookfn( const struct nf_hook_ops *ops,
 	}
 
 	return NF_ACCEPT;
+	*/
 
-}
 
 
 //called when module loaded via 'insmod'
